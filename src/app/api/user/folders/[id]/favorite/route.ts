@@ -1,4 +1,3 @@
-import { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/server/prisma";
 import { getAuthPayload } from "@/lib/server/auth/auth";
@@ -23,7 +22,7 @@ export async function POST(
       return NextResponse.json({ error: "Folder not found" }, { status: 404 });
     }
 
-    const data: Prisma.FolderUpdateInput = { isFavorite: true };
+    const data = { isFavorite: true };
 
     const updated = await prisma.folder.update({
       where: { id },
@@ -60,7 +59,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Folder not found" }, { status: 404 });
     }
 
-    const data: Prisma.FolderUpdateInput = { isFavorite: false };
+    const data = { isFavorite: false };
 
     const updated = await prisma.folder.update({
       where: { id },
