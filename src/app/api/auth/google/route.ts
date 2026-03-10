@@ -1,12 +1,11 @@
 import { randomBytes, createHash } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 
-
 function getBaseUrl(req: NextRequest): string {
-  return (
-    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ??
-    `https://${req.headers.get("host")}`
-  );
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "");
+  }
+  return `https://${req.headers.get("host")}`;
 }
 
 function base64url(buffer: Buffer) {
@@ -19,9 +18,7 @@ function base64url(buffer: Buffer) {
 
 function createPKCE() {
   const verifier = base64url(randomBytes(32));
-  const challenge = base64url(
-    createHash("sha256").update(verifier).digest()
-  );
+  const challenge = base64url(createHash("sha256").update(verifier).digest());
 
   return { verifier, challenge };
 }
@@ -32,7 +29,7 @@ export async function GET(request: NextRequest) {
   if (!clientId) {
     return NextResponse.json(
       { error: "Missing GOOGLE_CLIENT_ID" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
@@ -63,6 +60,7 @@ export async function GET(request: NextRequest) {
     sameSite: "none",
     path: "/",
     maxAge: 600,
+    domain: new URL(getBaseUrl(request)).hostname,
   });
 
   response.cookies.set("google_pkce_verifier", verifier, {
@@ -71,6 +69,7 @@ export async function GET(request: NextRequest) {
     sameSite: "none",
     path: "/",
     maxAge: 600,
+    domain: new URL(getBaseUrl(request)).hostname,
   });
 
   return response;
