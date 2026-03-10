@@ -8,10 +8,12 @@ import {
 import { setAuthCookies } from "@/lib/server/auth/cookies";
 
 function getBaseUrl(req: NextRequest): string {
-  return (
-    process.env.NEXT_PUBLIC_APP_URL ??
-    `${req.nextUrl.protocol}//${req.headers.get("host")}`
-  );
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "");
+  }
+
+  const host = req.headers.get("host");
+  return `https://${host}`;
 }
 
 export async function GET(request: NextRequest) {
