@@ -30,10 +30,34 @@ async function main() {
 
   console.log("🧹 Clearing database...");
 
-  await prisma.refreshToken.deleteMany();
-  await prisma.passwordResetToken.deleteMany();
-  await prisma.file.deleteMany();
-  await prisma.user.deleteMany();
+  await prisma.$transaction(async (tx) => {
+    await tx.fileTag.deleteMany();
+    await tx.folderTag.deleteMany();
+    await tx.share.deleteMany();
+    await tx.recentAccess.deleteMany();
+
+    await tx.uploadChunk.deleteMany();
+    await tx.uploadSession.deleteMany();
+
+    await tx.file.deleteMany();
+    await tx.folder.deleteMany();
+    await tx.tag.deleteMany();
+    await tx.fileBlob.deleteMany();
+
+    await tx.refreshToken.deleteMany();
+    await tx.passwordResetToken.deleteMany();
+    await tx.emailVerificationToken.deleteMany();
+
+    await tx.supportReply.deleteMany();
+    await tx.supportTicket.deleteMany();
+    await tx.adminLog.deleteMany();
+    await tx.storageRequest.deleteMany();
+
+    await tx.storageConfig.deleteMany();
+    await tx.storageStats.deleteMany();
+
+    await tx.user.deleteMany();
+  });
 
   console.log("🌱 Seeding admin user...");
 
