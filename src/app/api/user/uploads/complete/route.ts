@@ -7,6 +7,10 @@ import mime from "mime";
 import crypto from "crypto";
 import path from "path";
 
+type UploadChunkRow = {
+  partNumber: number;
+};
+
 export async function POST(req: NextRequest) {
   const payload = await getAuthPayload(req);
 
@@ -46,7 +50,7 @@ export async function POST(req: NextRequest) {
     /* 1️⃣ Fetch chunks */
     /* ------------------------- */
 
-    const chunks = await prisma.uploadChunk.findMany({
+    const chunks: UploadChunkRow[] = await prisma.uploadChunk.findMany({
       where: { uploadId },
       orderBy: { partNumber: "asc" },
     });
