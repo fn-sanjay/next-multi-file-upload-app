@@ -19,6 +19,8 @@ export async function GET(request: NextRequest) {
       createdAt: true,
       bio: true,
       profileImage: true,
+      isReadOnly: true,
+      isBanned: true,
     },
   });
 

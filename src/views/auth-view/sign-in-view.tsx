@@ -33,7 +33,7 @@ import { FaCube } from "react-icons/fa";
 import Link from "next/link";
 import { ROUTES } from "@/routes";
 import { useAuth } from "@/components/providers/auth-provider";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { authPost } from "@/lib/client/auth-api";
 import { signInSchema, type SignInFormValues } from "@/lib/validations/auth";
 
@@ -48,8 +48,10 @@ type LoginResponse = {
 
 export const SignInView = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [bannedMessage, setBannedMessage] = useState<string | null>(null);
   const { setRole, setUser } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const form = useForm<SignInFormValues>({
     resolver: zodResolver(signInSchema),
@@ -61,6 +63,7 @@ export const SignInView = () => {
 
   const onSubmit = form.handleSubmit(async (values) => {
     try {
+      setBannedMessage(null);
       await authPost("/api/auth/login", values);
 
       // Fetch real user
@@ -84,6 +87,8 @@ export const SignInView = () => {
         avatar: user.profileImage || user.avatar || "",
         profileImage: user.profileImage,
         bio: user.bio,
+        isReadOnly: user.isReadOnly,
+        isBanned: user.isBanned,
       });
 
       toast.success("Login successful");
@@ -95,11 +100,23 @@ export const SignInView = () => {
       );
 
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Login failed");
+      const message =
+        error instanceof Error ? error.message : "Login failed";
+      if (message.toLowerCase().includes("banned")) {
+        setBannedMessage(message);
+      } else {
+        toast.error(message);
+      }
     }
   });
 
   const isSubmitting = form.formState.isSubmitting;
+
+  React.useEffect(() => {
+    if (searchParams?.get("banned") === "1") {
+      setBannedMessage("Your account has been banned. Contact support.");
+    }
+  }, [searchParams]);
 
   return (
     <div className="w-full">
@@ -125,6 +142,17 @@ export const SignInView = () => {
         </CardHeader>
 
         <CardContent className="space-y-6 relative">
+          {bannedMessage && (
+            <div className="rounded-xl border border-rose-500/40 bg-rose-500/10 p-4 text-rose-200">
+              <p className="text-[10px] font-black uppercase tracking-widest text-rose-300">
+                Account Banned
+              </p>
+              <p className="mt-2 text-sm font-medium">{bannedMessage}</p>
+              <p className="mt-2 text-[11px] text-rose-300/80">
+                If you believe this is a mistake, contact support.
+              </p>
+            </div>
+          )}
           <form className="space-y-4" onSubmit={onSubmit}>
             <div className="space-y-2">
               <Label

@@ -31,6 +31,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
   }
 
+  if (user.isBanned) {
+    return NextResponse.json(
+      { error: "Your account has been banned. Contact support." },
+      { status: 403 },
+    );
+  }
+
   // 🚫 Block password login for Google users
   if (user.provider === "GOOGLE") {
     return NextResponse.json(

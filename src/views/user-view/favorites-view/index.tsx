@@ -265,6 +265,7 @@ export default function FavoritesView() {
                 >
                     <FavoriteFolderCard
                       item={item}
+                      href={`/folders/${item.slug || item.id}`}
                       onRemoveFavorite={() => removeFavorite(item)}
                     />
                   </FileContextMenu>

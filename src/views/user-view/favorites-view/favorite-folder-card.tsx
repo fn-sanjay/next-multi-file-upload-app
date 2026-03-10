@@ -1,3 +1,5 @@
+import Link from "next/link";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -5,7 +7,7 @@ import { Folder, MoreVertical, Star, Tag as TagIcon } from "lucide-react";
 import { openContextMenuFromButton } from "@/lib/open-context-menu";
 import { cn } from "@/lib/utils";
 
-type FavoriteFolderCardProps = {
+type BaseProps = {
   item: {
     id: string;
     name: string;
@@ -18,18 +20,38 @@ type FavoriteFolderCardProps = {
   onRemoveFavorite: () => void;
 };
 
-export function FavoriteFolderCard({
-  item,
-  onRemoveFavorite,
-}: FavoriteFolderCardProps) {
-  return (
-    <Card className="group h-full min-h-56 p-5 border border-white/8 bg-white/5 hover:border-primary/50 hover:bg-white/10 transition-all duration-300 relative overflow-hidden">
+type LinkProps = BaseProps & {
+  href: string;
+} & Omit<React.ComponentPropsWithoutRef<typeof Link>, "href" | "children">;
+
+type DivProps = BaseProps &
+  React.ComponentPropsWithoutRef<"div"> & {
+    href?: undefined;
+  };
+
+type FavoriteFolderCardProps = LinkProps | DivProps;
+
+export function FavoriteFolderCard(props: FavoriteFolderCardProps) {
+  const { item, onRemoveFavorite } = props;
+
+  const renderCard = (
+    className?: string,
+    divProps?: React.ComponentPropsWithoutRef<"div">
+  ) => (
+    <Card
+      className={cn(
+        "group h-full min-h-56 p-5 border border-white/8 bg-white/5 hover:border-primary/50 hover:bg-white/10 transition-all duration-300 relative overflow-hidden cursor-pointer",
+        className
+      )}
+      {...divProps}
+    >
       <div className="absolute inset-0 bg-linear-to-br from-primary/8 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
       <div className="relative z-10 flex items-start justify-between">
         <div className="p-3 rounded-2xl bg-primary/12 text-primary shadow-sm ring-1 ring-primary/20">
           <Folder className="w-6 h-6 fill-current" />
         </div>
+
         <Button
           variant="ghost"
           size="icon"
@@ -44,7 +66,9 @@ export function FavoriteFolderCard({
           <Star
             className={cn(
               "w-4 h-4",
-              item.isFavorite ? "fill-primary text-primary" : "fill-transparent text-primary",
+              item.isFavorite
+                ? "fill-primary text-primary"
+                : "fill-transparent text-primary"
             )}
           />
         </Button>
@@ -78,6 +102,7 @@ export function FavoriteFolderCard({
             <span className="w-1 h-1 rounded-full bg-white/30" />
             <span className="font-semibold">{item.modifiedTime}</span>
           </div>
+
           <Button
             variant="ghost"
             size="icon"
@@ -95,4 +120,24 @@ export function FavoriteFolderCard({
       </div>
     </Card>
   );
+
+  // LINK VERSION
+  if ("href" in props && typeof props.href === "string") {
+    const { href, className, ...linkProps } = props;
+
+    return (
+      <Link
+        href={href}
+        className={cn("block h-full w-full", className)}
+        {...linkProps}
+      >
+        {renderCard()}
+      </Link>
+    );
+  }
+
+  // DIV VERSION
+  const { className, ...divProps } = props;
+
+  return renderCard(className, divProps);
 }

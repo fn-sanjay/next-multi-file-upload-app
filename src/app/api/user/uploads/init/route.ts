@@ -18,6 +18,35 @@ export async function POST(req: NextRequest) {
 
   const { filename, size, hash, folderId, relativePath } = parsed.data;
 
+  const user = await prisma.user.findUnique({
+    where: { id: payload.sub },
+    select: {
+      id: true,
+      isReadOnly: true,
+      isBanned: true,
+      storageUsed: true,
+      storageQuota: true,
+    },
+  });
+
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (user.isBanned) {
+    return NextResponse.json(
+      { error: "Your account has been banned." },
+      { status: 403 },
+    );
+  }
+
+  if (user.isReadOnly) {
+    return NextResponse.json(
+      { error: "Your account is read-only." },
+      { status: 403 },
+    );
+  }
+
   let actualFolderId = folderId || null;
 
   if (relativePath) {
@@ -99,6 +128,17 @@ export async function POST(req: NextRequest) {
       blobId: existingBlob.id,
       file: fileRecord,
     });
+  }
+
+  const usedBytes = BigInt(user.storageUsed ?? 0);
+  const quotaBytes = BigInt(user.storageQuota ?? 0);
+  const incomingBytes = BigInt(Math.ceil(size));
+
+  if (usedBytes + incomingBytes > quotaBytes) {
+    return NextResponse.json(
+      { error: "Storage limit exceeded." },
+      { status: 403 },
+    );
   }
 
   const session = await prisma.uploadSession.create({

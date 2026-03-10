@@ -16,6 +16,12 @@ export type AdminQuery = {
     email: string;
     name: string | null;
   };
+  replies?: Array<{
+    id: string;
+    message: string;
+    createdAt: string;
+    userId: string;
+  }>;
 };
 
 const getErrorMessage = (err: unknown, fallback: string) =>

@@ -44,7 +44,14 @@ export async function GET(request: NextRequest) {
           select: { id: true, email: true, name: true },
         },
         replies: {
-          select: { id: true },
+          select: {
+            id: true,
+            message: true,
+            createdAt: true,
+            userId: true,
+          },
+          orderBy: { createdAt: "desc" },
+          take: 1,
         },
       },
       orderBy: { updatedAt: "desc" },

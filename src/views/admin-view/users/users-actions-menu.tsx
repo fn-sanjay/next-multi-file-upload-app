@@ -56,7 +56,7 @@ export function UserActionsMenu({ user, onToggleBan, onToggleReadOnly, onDelete,
           className="text-red-500 focus:text-red-500 focus:bg-red-500/5 cursor-pointer"
         >
           <Lock className="size-4 mr-2" />
-          Soft delete user
+          Delete user
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

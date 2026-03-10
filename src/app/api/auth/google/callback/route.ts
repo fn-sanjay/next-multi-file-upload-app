@@ -140,6 +140,14 @@ export async function GET(request: NextRequest) {
 
   // if provider === GOOGLE → do nothing, just login
 
+  if (user.isBanned) {
+    const bannedRedirect = new URL("/sign-in?banned=1", getBaseUrl(request));
+    const response = NextResponse.redirect(bannedRedirect);
+    response.cookies.delete("google_oauth_state");
+    response.cookies.delete("google_pkce_verifier");
+    return response;
+  }
+
   // Create access token
   const accessToken = await signAccessToken({
     sub: user.id,

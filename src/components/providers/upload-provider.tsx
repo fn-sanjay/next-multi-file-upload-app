@@ -12,7 +12,7 @@ interface UploadFile {
   name: string;
   size: string;
   progress: number;
-  status: "uploading" | "paused" | "error" | "complete";
+  status: "initializing" | "uploading" | "paused" | "error" | "complete";
   tags?: string[];
 }
 
@@ -26,6 +26,8 @@ interface UploadContextType {
   setIsModalOpen: (open: boolean) => void;
   isContactAdminOpen: boolean;
   setIsContactAdminOpen: (open: boolean) => void;
+  pauseAll: () => void;
+  resumeAll: () => Promise<void>;
 }
 
 interface UppyMeta extends Record<string, unknown> {
@@ -75,6 +77,7 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
   const [totalProgress, setTotalProgress] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isContactAdminOpen, setIsContactAdminOpen] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
 
   const [uppy] = useState(() => {
     return new Uppy<UppyMeta, UppyResponseBody>({
@@ -270,11 +273,15 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
         name: f.name,
         size: `${((f.size || 0) / (1024 * 1024)).toFixed(1)} MB`,
         progress: f.progress?.percentage || 0,
-        status: f.progress?.uploadComplete
-          ? "complete"
-          : f.progress?.uploadStarted
-            ? "uploading"
-            : "paused",
+        status: f.error
+          ? "error"
+          : f.progress?.uploadComplete
+            ? "complete"
+            : isPaused
+              ? "paused"
+              : f.progress?.uploadStarted || (f.progress?.percentage ?? 0) > 0
+                ? "uploading"
+                : "initializing",
         tags: (f.meta.tags as string)?.split(",").filter(Boolean) || [],
       }));
       setFiles(updatedFiles);
@@ -290,6 +297,7 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
         toast.success(
           `Successfully uploaded ${successCount} file(s)`,
         );
+        setIsPaused(false);
         // Slight delay to let user see 100% complete before closing
         setTimeout(() => {
           setIsModalOpen(false);
@@ -314,6 +322,16 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
     };
   }, [uppy]);
 
+  const pauseAll = () => {
+    uppy.pauseAll();
+    setIsPaused(true);
+  };
+
+  const resumeAll = async () => {
+    setIsPaused(false);
+    await uppy.upload();
+  };
+
   return (
     <UploadContext.Provider
       value={{
@@ -324,6 +342,8 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
         setIsModalOpen,
         isContactAdminOpen,
         setIsContactAdminOpen,
+        pauseAll,
+        resumeAll,
       }}
     >
       {children}

@@ -14,7 +14,8 @@ export const AppSidebar = ({
   ...props
 }: React.ComponentProps<typeof Sidebar>) => {
   const { setIsModalOpen } = useUpload();
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
+  const isReadOnly = Boolean(user?.isReadOnly);
 
   return (
     <Sidebar
@@ -26,7 +27,7 @@ export const AppSidebar = ({
       <SidebarHeader className="p-3 bg-black group-data-[collapsible=icon]:items-center">
         <AppSidebarHeader />
 
-        {!isAdmin && (
+        {!isAdmin && !isReadOnly && (
           <div className="mt-4 w-full flex justify-center">
             <Button
               onClick={() => setIsModalOpen(true)}

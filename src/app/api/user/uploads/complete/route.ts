@@ -46,6 +46,62 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    const user = await prisma.user.findUnique({
+      where: { id: payload.sub },
+      select: {
+        id: true,
+        isReadOnly: true,
+        isBanned: true,
+        storageUsed: true,
+        storageQuota: true,
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (user.isBanned) {
+      return NextResponse.json(
+        { error: "Your account has been banned." },
+        { status: 403 },
+      );
+    }
+
+    if (user.isReadOnly) {
+      return NextResponse.json(
+        { error: "Your account is read-only." },
+        { status: 403 },
+      );
+    }
+
+    const usedBytes = BigInt(user.storageUsed ?? 0);
+    const quotaBytes = BigInt(user.storageQuota ?? 0);
+    const sessionBytes = BigInt(session.size ?? 0);
+
+    if (usedBytes + sessionBytes > quotaBytes) {
+      const chunks: UploadChunkRow[] = await prisma.uploadChunk.findMany({
+        where: { uploadId },
+        select: { partNumber: true },
+      });
+
+      const paths = chunks.map(
+        (c) => `chunks/${uploadId}/${c.partNumber}`,
+      );
+
+      if (paths.length > 0) {
+        await supabaseAdmin.storage.from("uploads").remove(paths);
+      }
+
+      await prisma.uploadChunk.deleteMany({ where: { uploadId } });
+      await prisma.uploadSession.delete({ where: { id: uploadId } });
+
+      return NextResponse.json(
+        { error: "Storage limit exceeded." },
+        { status: 403 },
+      );
+    }
+
     /* ------------------------- */
     /* 1️⃣ Fetch chunks */
     /* ------------------------- */

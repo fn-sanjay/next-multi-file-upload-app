@@ -26,6 +26,8 @@ interface User {
   role: string;
   bio?: string;
   profileImage?: string | null;
+  isReadOnly?: boolean;
+  isBanned?: boolean;
 }
 
 interface AuthContextType {
@@ -91,6 +93,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             avatar,
             profileImage: data.user.profileImage,
             bio: data.user.bio,
+            isReadOnly: data.user.isReadOnly,
+            isBanned: data.user.isBanned,
           });
           setRole(normalizedRole);
 

@@ -36,6 +36,9 @@ export function QueriesDetailSheet({
   onReply,
   actioningId,
 }: QueriesDetailSheetProps) {
+  const latestReply = selectedQuery?.replies?.[0];
+  const hasReply = Boolean(latestReply?.message?.trim());
+
   return (
     <Sheet
       open={!!selectedQuery}
@@ -64,16 +67,23 @@ export function QueriesDetailSheet({
               <FromUser query={selectedQuery} />
               <UserMessage message={selectedQuery.message} />
 
-              {selectedQuery.status === "CLOSED" ? (
+              {hasReply ? (
+                <SentReply
+                  reply={latestReply?.message}
+                  repliedAt={latestReply?.createdAt}
+                />
+              ) : selectedQuery.status === "CLOSED" ? (
                 <SentReply />
-              ) : (
+              ) : null}
+
+              {selectedQuery.status !== "CLOSED" ? (
                 <DraftReply
                   replyText={replyText}
                   setReplyText={setReplyText}
                   onReply={onReply}
                   actioning={actioningId === selectedQuery.id}
                 />
-              )}
+              ) : null}
             </div>
 
             <SheetFooter className="p-6 border-t border-zinc-800 bg-black/40">
@@ -104,9 +114,6 @@ function FromUser({ query }: { query: AdminQuery }) {
             </p>
           </div>
         </div>
-        <Button size="icon" variant="ghost" className="size-8 text-zinc-700 hover:text-white">
-          <MoreHorizontal className="size-4" />
-        </Button>
       </div>
     </div>
   );
@@ -126,15 +133,35 @@ function UserMessage({ message }: { message: string }) {
   );
 }
 
-function SentReply() {
+function SentReply({
+  reply,
+  repliedAt,
+}: {
+  reply?: string;
+  repliedAt?: string;
+}) {
+  const replyText = reply?.trim();
   return (
     <div className="space-y-2 pt-4 border-t border-zinc-800/50">
-      <Label className="text-primary italic">Sent Reply</Label>
+      <Label className="text-primary italic mb-5">Sent Reply</Label>
       <div className="p-5 rounded-2xl bg-primary/5 border border-primary/20 text-sm text-zinc-200 leading-relaxed relative shadow-[0_0_15px_rgba(182,255,0,0.05)]">
         <Badge className="absolute -top-3 left-4 bg-primary text-black text-[8px] font-black px-2 py-0">
           ADMIN RESPONSE
         </Badge>
-        User has been notified via email.
+        {replyText ? (
+          <>
+            <p className="text-zinc-300 italic">
+              &quot;{replyText}&quot;
+            </p>
+            {repliedAt ? (
+              <p className="mt-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                Sent {new Date(repliedAt).toLocaleString()}
+              </p>
+            ) : null}
+          </>
+        ) : (
+          "User has been notified via email."
+        )}
         <div className="flex items-center gap-1.5 mt-3 text-[10px] font-black text-primary uppercase tracking-widest">
           <CheckCircle2 className="size-3" />
           Delivered to user

@@ -9,12 +9,13 @@ import {
   AlertCircle,
   CheckCircle2,
   Tag,
+  Loader2,
 } from "lucide-react";
 import { useUpload } from "@/components/providers/upload-provider";
 import { Badge } from "@/components/ui/badge";
 
 export function PartialUploads() {
-  const { files, uppy } = useUpload();
+  const { files, pauseAll, resumeAll, uppy } = useUpload();
 
   if (files.length === 0) {
     return null; // Don't show the section if no uploads
@@ -53,6 +54,8 @@ export function PartialUploads() {
                     <AlertCircle className="w-4 h-4" />
                   ) : upload.status === "complete" ? (
                     <CheckCircle2 className="w-4 h-4" />
+                  ) : upload.status === "initializing" ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
                     <CloudUpload
                       className={`w-4 h-4 ${upload.status === "uploading" ? "animate-bounce" : ""}`}
@@ -76,16 +79,16 @@ export function PartialUploads() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => uppy.upload()}
+                    onClick={() => resumeAll()}
                     className="h-7 w-7 text-chartreuse-500 hover:bg-chartreuse-500/10"
                   >
                     <Play className="w-3.5 h-3.5 fill-current" />
                   </Button>
-                ) : upload.status === "uploading" ? (
+                ) : upload.status === "uploading" || upload.status === "initializing" ? (
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => uppy.pauseAll()}
+                    onClick={() => pauseAll()}
                     className="h-7 w-7 text-zinc-400 hover:bg-white/10"
                   >
                     <Pause className="w-3.5 h-3.5 fill-current" />
@@ -127,7 +130,9 @@ export function PartialUploads() {
                         ? "text-destructive"
                         : upload.status === "complete"
                           ? "text-emerald-500 uppercase"
-                          : "text-chartreuse-500 uppercase"
+                          : upload.status === "paused"
+                            ? "text-zinc-400 uppercase"
+                            : "text-chartreuse-500 uppercase"
                     }
                   >
                     {upload.status}
