@@ -38,6 +38,22 @@ interface ApiErrorResponse {
   details?: string;
 }
 
+type UploadInitResponse = ApiErrorResponse & {
+  deduplicated?: boolean;
+  uploadId?: string;
+  chunkSize?: number;
+  file?: { id: string };
+};
+
+type UploadCompleteResponse = ApiErrorResponse & {
+  file?: { id: string };
+};
+
+type UploadResult = {
+  successful: Array<{ id: string }>;
+  failed?: Array<unknown>;
+};
+
 // Hashing helper
 async function computeHash(file: File | Blob): Promise<string> {
   const buffer = await file.arrayBuffer();
@@ -109,13 +125,7 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
             }),
           });
 
-          const initData = await readJsonSafely<
-            ApiErrorResponse & {
-              deduplicated?: boolean;
-              uploadId?: string;
-              chunkSize?: number;
-            }
-          >(initRes);
+          const initData = await readJsonSafely<UploadInitResponse>(initRes);
           if (!initRes.ok) {
             throw new Error(
               initData?.error || `Init failed (HTTP ${initRes.status})`,
@@ -152,12 +162,12 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
             toast.info(
               "File already exists in this folder – using existing version.",
             );
-            if ((initData as any).file?.id) {
-              await attachTags((initData as any).file.id);
+            if (initData?.file?.id) {
+              await attachTags(initData.file.id);
             }
             uppy.emit("upload-success", file, {
               status: 200,
-              body: initData as any,
+              body: initData as Record<string, unknown>,
             });
             continue;
           }
@@ -216,9 +226,8 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
             },
           );
 
-          const completeData = await readJsonSafely<
-            ApiErrorResponse & Record<string, unknown>
-          >(completeRes);
+          const completeData =
+            await readJsonSafely<UploadCompleteResponse>(completeRes);
           if (!completeRes.ok) {
             throw new Error(
               completeData?.error ||
@@ -229,13 +238,13 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
             throw new Error("Finalization returned an empty response");
           }
 
-          if ((completeData as any).file?.id) {
-            await attachTags((completeData as any).file.id);
+          if (completeData.file?.id) {
+            await attachTags(completeData.file.id);
           }
 
           uppy.emit("upload-success", file, {
             status: 200,
-            body: completeData as any,
+            body: completeData as Record<string, unknown>,
           });
         } catch (err) {
           uppy.emit("upload-error", file, err as Error);
@@ -272,7 +281,7 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
       setTotalProgress(uppy.getState().totalProgress || 0);
     };
 
-    const handleComplete = (result: any) => {
+    const handleComplete = (result: UploadResult) => {
       if (result.successful.length > 0) {
         if (typeof window !== "undefined") {
           window.dispatchEvent(new Event(UPLOADS_REFRESH_EVENT));

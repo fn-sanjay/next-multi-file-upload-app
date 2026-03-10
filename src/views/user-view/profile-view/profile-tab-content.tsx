@@ -16,6 +16,9 @@ import { fetchWithRefresh } from "@/lib/client/auth-api";
 import { toast } from "sonner";
 import { useAuth } from "@/components/providers/auth-provider";
 
+const getErrorMessage = (err: unknown, fallback: string) =>
+  err instanceof Error ? err.message : fallback;
+
 interface ProfileTabContentProps {
   storage?: unknown;
   loading?: boolean;
@@ -55,8 +58,8 @@ export function ProfileTabContent({ storage: _storage }: ProfileTabContentProps)
       toast.success("Message sent to admin");
       setSubject("");
       setMessage("");
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to send");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, "Failed to send"));
     } finally {
       setSubmitting(false);
     }
@@ -88,8 +91,8 @@ export function ProfileTabContent({ storage: _storage }: ProfileTabContentProps)
         });
       }
       toast.success("Profile updated");
-    } catch (err: any) {
-      toast.error(err?.message || "Profile update failed");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, "Profile update failed"));
     } finally {
       setSavingProfile(false);
     }

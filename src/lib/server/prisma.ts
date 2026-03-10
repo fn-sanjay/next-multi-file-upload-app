@@ -22,6 +22,6 @@ if (process.env.NODE_ENV !== "production") {
 
 export type TransactionClient = Parameters<
   typeof prisma.$transaction
->[0] extends (arg: infer T) => any
+>[0] extends (arg: infer T) => unknown
   ? T
   : never;

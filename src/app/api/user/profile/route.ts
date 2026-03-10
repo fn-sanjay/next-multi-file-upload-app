@@ -37,8 +37,8 @@ export async function PATCH(request: NextRequest) {
     });
 
     return NextResponse.json({ user });
-  } catch (error: any) {
-    if (error?.issues) {
+  } catch (error: unknown) {
+    if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: "Invalid data", details: error.issues },
         { status: 400 },

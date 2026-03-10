@@ -19,13 +19,19 @@ interface SearchModalProps {
   setIsOpen: (open: boolean) => void;
 }
 
+type SearchFile = { id: string; filename: string; folderId: string | null };
+type SearchFolder = { id: string; name: string };
+type SearchTag = { id: string; name: string };
+type SearchSection = "files" | "folders" | "tags";
+type SearchItem = SearchFile | SearchFolder | SearchTag;
+
 export const SearchModal = ({ isOpen, setIsOpen }: SearchModalProps) => {
   const [query, setQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<{
-    files: Array<{ id: string; filename: string; folderId: string | null }>;
-    folders: Array<{ id: string; name: string }>;
-    tags: Array<{ id: string; name: string }>;
+    files: SearchFile[];
+    folders: SearchFolder[];
+    tags: SearchTag[];
   }>({ files: [], folders: [], tags: [] });
   const [activeIndex, setActiveIndex] = useState(0);
   const router = useRouter();
@@ -47,10 +53,18 @@ export const SearchModal = ({ isOpen, setIsOpen }: SearchModalProps) => {
           setIsLoading(false);
           return;
         }
-        const data = await res.json();
+        const data = (await res.json()) as {
+          files?: Array<{
+            id?: string;
+            filename?: string;
+            folderId?: string | null;
+          }>;
+          folders?: SearchFolder[];
+          tags?: SearchTag[];
+        };
         setResults({
           files:
-            (data.files || []).map((f: any) => ({
+            (data.files || []).map((f) => ({
               id: f.id,
               filename: f.filename,
               folderId: f.folderId ?? null,
@@ -68,27 +82,30 @@ export const SearchModal = ({ isOpen, setIsOpen }: SearchModalProps) => {
     return () => clearTimeout(handler);
   }, [query]);
 
-  const handleSelect = (section: string, item: any) => {
+  const handleSelect = (section: SearchSection, item: SearchItem) => {
     setIsOpen(false);
 
     if (section === "files") {
-      const folderPath = item.folderId ? `/folders/${item.folderId}` : "/my-files";
-      router.push(`${folderPath}?fileId=${item.id}`);
+      const file = item as SearchFile;
+      const folderPath = file.folderId ? `/folders/${file.folderId}` : "/my-files";
+      router.push(`${folderPath}?fileId=${file.id}`);
       return;
     }
 
     if (section === "folders") {
-      router.push(`/folders/${item.id}`);
+      const folder = item as SearchFolder;
+      router.push(`/folders/${folder.id}`);
       return;
     }
 
     if (section === "tags") {
-      router.push(`/tags?tagId=${item.id}`);
+      const tag = item as SearchTag;
+      router.push(`/tags?tagId=${tag.id}`);
     }
   };
 
   const flatResults = useMemo(() => {
-    const list: Array<{ section: string; label: string; item: any }> = [];
+    const list: Array<{ section: SearchSection; label: string; item: SearchItem }> = [];
     (results.files || []).forEach((file) =>
       list.push({ section: "files", label: file.filename, item: file }),
     );
@@ -162,8 +179,13 @@ export const SearchModal = ({ isOpen, setIsOpen }: SearchModalProps) => {
 
           {query.trim().length > 0 && (
             <div className="space-y-4">
-              {["files", "folders", "tags"].map((section) => {
-                const list = (results as any)[section] as Array<{ id: string; name?: string; filename?: string }>;
+              {(["files", "folders", "tags"] as SearchSection[]).map((section) => {
+                const sectionItems: Record<SearchSection, SearchItem[]> = {
+                  files: results.files,
+                  folders: results.folders,
+                  tags: results.tags,
+                };
+                const list = sectionItems[section];
                 if (!list || list.length === 0) return null;
                 return (
                   <div key={section} className="px-3 py-2">
@@ -196,7 +218,7 @@ export const SearchModal = ({ isOpen, setIsOpen }: SearchModalProps) => {
                             </div>
                             <div className="text-left">
                               <p className="text-sm font-bold text-zinc-200 group-hover:text-primary transition-colors">
-                                {item.filename || item.name}
+                                {"filename" in item ? item.filename : item.name}
                               </p>
                               <p className="text-[10px] text-zinc-500 uppercase font-black tracking-wider group-hover:text-zinc-400 transition-colors">
                                 {section === "files"

@@ -18,6 +18,9 @@ export type AdminQuery = {
   };
 };
 
+const getErrorMessage = (err: unknown, fallback: string) =>
+  err instanceof Error && err.message ? err.message : fallback;
+
 export default function QueriesView() {
   const [queries, setQueries] = useState<AdminQuery[]>([]);
   const [selectedQuery, setSelectedQuery] = useState<AdminQuery | null>(null);
@@ -36,8 +39,8 @@ export default function QueriesView() {
       }
       const data = await res.json();
       setQueries(data.queries || []);
-    } catch (err: any) {
-      toast.error(err?.message || "Unable to fetch queries");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, "Unable to fetch queries"));
     } finally {
       setLoading(false);
     }
@@ -76,8 +79,8 @@ export default function QueriesView() {
       setReplyText("");
       setSelectedQuery(null);
       await loadQueries();
-    } catch (err: any) {
-      toast.error(err?.message || "Reply failed");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, "Reply failed"));
     } finally {
       setActioningId(null);
     }

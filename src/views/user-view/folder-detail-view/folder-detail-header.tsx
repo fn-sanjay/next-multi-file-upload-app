@@ -11,8 +11,8 @@ interface FolderDetailHeaderProps {
   folder: {
     id: string;
     name: string;
-    files: any[];
-    children: any[];
+    files?: Array<{ id?: string }>;
+    children?: Array<{ id?: string }>;
     updatedAt?: string;
   };
   folderSizeBytes: number;

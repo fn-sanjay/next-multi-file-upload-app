@@ -12,6 +12,9 @@ import {
 import { BRAND_COLORS, MAX_TAGS_PER_USER } from "@/lib/constants";
 import { fetchWithRefresh } from "@/lib/client/auth-api";
 
+const getErrorMessage = (err: unknown, fallback: string) =>
+  err instanceof Error ? err.message : fallback;
+
 interface TagsHeaderProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
@@ -66,8 +69,8 @@ export function TagsHeader({
       setNewTagName("");
       setNewTagColor(BRAND_COLORS[0]);
       onTagCreated?.();
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(getErrorMessage(e, "Failed to create tag"));
     } finally {
       setIsCreating(false);
     }

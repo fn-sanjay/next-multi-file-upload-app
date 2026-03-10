@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/server/prisma";
 import { getAuthPayload } from "@/lib/server/auth/auth";
 
+type FolderNode = {
+  id: string;
+  name: string;
+  parentId: string | null;
+  children: FolderNode[];
+};
+
 export async function GET(request: NextRequest) {
   const payload = await getAuthPayload(request);
 
@@ -23,13 +30,13 @@ export async function GET(request: NextRequest) {
       orderBy: { name: "asc" },
     });
 
-    const map: Record<string, any> = {};
+    const map: Record<string, FolderNode> = {};
 
     folders.forEach((f) => {
       map[f.id] = { ...f, children: [] };
     });
 
-    const tree: any[] = [];
+    const tree: FolderNode[] = [];
 
     folders.forEach((f) => {
       if (f.parentId && map[f.parentId]) {

@@ -3,6 +3,9 @@ import { prisma } from "@/lib/server/prisma";
 import { getAuthPayload } from "@/lib/server/auth/auth";
 import { supabaseAdmin as supabase } from "@/lib/supabase/supabase-admin";
 
+const hasErrorCode = (err: unknown): err is { code?: string } =>
+  typeof err === "object" && err !== null && "code" in err;
+
 export async function POST(req: NextRequest) {
   const payload = await getAuthPayload(req);
 
@@ -47,8 +50,8 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ success: true });
-  } catch (err: any) {
-    if (err.code === "P2002") {
+  } catch (err: unknown) {
+    if (hasErrorCode(err) && err.code === "P2002") {
       // Unique constraint failed, chunk probably already exists
       console.warn(`[Chunk API] Chunk already exists: ${storageKey}`);
       return NextResponse.json({
@@ -60,7 +63,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         error: "Chunk upload failed (Internal)",
-        details: err?.message || String(err),
+        details: err instanceof Error ? err.message : String(err),
       },
       { status: 500 },
     );

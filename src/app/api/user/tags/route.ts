@@ -3,6 +3,9 @@ import { prisma } from "@/lib/server/prisma";
 import { getAuthPayload } from "@/lib/server/auth/auth";
 import { createTagSchema } from "@/lib/validations/tags";
 
+const hasErrorCode = (err: unknown): err is { code?: string } =>
+  typeof err === "object" && err !== null && "code" in err;
+
 export async function GET(request: NextRequest) {
   const payload = await getAuthPayload(request);
 
@@ -56,8 +59,8 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ tag }, { status: 201 });
-  } catch (error: any) {
-    if (error.code === "P2002") {
+  } catch (error: unknown) {
+    if (hasErrorCode(error) && error.code === "P2002") {
       return NextResponse.json(
         { error: "Tag with this name already exists" },
         { status: 409 },

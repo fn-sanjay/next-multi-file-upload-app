@@ -5,6 +5,9 @@ import { StorageRequestsContent } from "./storage-requests-content";
 import { fetchWithRefresh } from "@/lib/client/auth-api";
 import { toast } from "sonner";
 
+const getErrorMessage = (err: unknown, fallback: string) =>
+  err instanceof Error ? err.message : fallback;
+
 export type AdminStorageRequest = {
   id: string;
   userId: string;
@@ -37,8 +40,8 @@ export default function StorageRequestsView() {
       }
       const data = await res.json();
       setRequests(data.requests || []);
-    } catch (err: any) {
-      toast.error(err?.message || "Unable to fetch requests");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, "Unable to fetch requests"));
     } finally {
       setLoading(false);
     }
@@ -82,8 +85,8 @@ export default function StorageRequestsView() {
       await res.json();
       await loadRequests();
       toast.success(action === "APPROVE" ? "Storage approved" : "Request rejected");
-    } catch (err: any) {
-      toast.error(err?.message || "Action failed");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, "Action failed"));
     } finally {
       setActioningId(null);
     }

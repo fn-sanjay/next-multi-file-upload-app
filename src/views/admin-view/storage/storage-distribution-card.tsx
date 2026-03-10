@@ -3,7 +3,7 @@ import { Bar, BarChart, XAxis, YAxis, Cell } from "recharts";
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import type { AdminStorageStats } from "./storage-content";
 
-const COLORS = {
+const COLORS: Record<string, string> = {
   Images: "#B6FF00",
   Videos: "#00D4C8",
   Docs: "#a855f7",
@@ -74,7 +74,7 @@ export function StorageDistributionCard({ usage, loading }: { usage?: AdminStora
             />
             <Bar dataKey="value" radius={[0, 4, 4, 0]} background={{ fill: "transparent" }} animationDuration={900} >
               {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={(COLORS as any)[entry.name] ?? "#a1a1aa"} />
+                <Cell key={`cell-${index}`} fill={COLORS[entry.name] ?? "#a1a1aa"} />
               ))}
             </Bar>
           </BarChart>
@@ -83,7 +83,7 @@ export function StorageDistributionCard({ usage, loading }: { usage?: AdminStora
           {data.map((item) => (
             <div key={item.name} className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="size-2 rounded-full" style={{ backgroundColor: (COLORS as any)[item.name] ?? "#a1a1aa" }} />
+                <div className="size-2 rounded-full" style={{ backgroundColor: COLORS[item.name] ?? "#a1a1aa" }} />
                 <span className="text-xs font-medium text-zinc-400">{item.name}</span>
               </div>
               <span className="text-xs font-bold text-white">

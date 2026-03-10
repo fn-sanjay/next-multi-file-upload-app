@@ -143,7 +143,7 @@ export async function POST(req: NextRequest) {
           filename: session.filename,
           blobId: blob.id,
           userId: payload.sub,
-          folderId: (session as any).folderId,
+          folderId: session.folderId ?? null,
         },
       });
 

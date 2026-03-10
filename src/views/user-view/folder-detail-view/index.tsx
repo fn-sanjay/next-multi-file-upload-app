@@ -10,15 +10,62 @@ import { SubfoldersSection } from "./subfolders-section";
 import { FilesSection } from "./files-section";
 import { TagLinkModal } from "@/components/common/tag-link-modal";
 
+type ApiTag = {
+  id?: string;
+  name?: string;
+  color?: string;
+};
+
+type ApiTagLink = {
+  tagId?: string;
+  tag?: ApiTag;
+};
+
+type ApiFile = {
+  id: string;
+  filename: string;
+  createdAt?: string | null;
+  mimeType?: string | null;
+  previewUrl?: string | null;
+  tags?: ApiTagLink[];
+  blob?: {
+    size?: number | string | null;
+  } | null;
+};
+
+type ApiFolder = {
+  id: string;
+  name: string;
+  tags?: ApiTagLink[];
+  files?: ApiFile[];
+  children?: ApiFolder[];
+  createdAt?: string | null;
+  updatedAt?: string | null;
+};
+
+type NormalizedFile = {
+  id: string;
+  name: string;
+  size: string;
+  created: string;
+  mimeType?: string | null;
+  previewUrl?: string | null;
+  tags: Array<{
+    id?: string;
+    name?: string;
+    color?: string;
+  }>;
+};
+
 export default function FolderDetailView({ slug }: { slug: string }) {
 
-  const [folder, setFolder] = useState<any>(null);
-  const [subfolders, setSubfolders] = useState<any[]>([]);
-  const [files, setFiles] = useState<any[]>([]);
+  const [folder, setFolder] = useState<ApiFolder | null>(null);
+  const [subfolders, setSubfolders] = useState<ApiFolder[]>([]);
+  const [files, setFiles] = useState<NormalizedFile[]>([]);
   const [folderSizeBytes, setFolderSizeBytes] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  const [selectedFile, setSelectedFile] = useState<any>(null);
+  const [selectedFile, setSelectedFile] = useState<NormalizedFile | null>(null);
 
   const [tagModalOpen, setTagModalOpen] = useState(false);
 
@@ -50,29 +97,20 @@ export default function FolderDetailView({ slug }: { slug: string }) {
       const filesList = filesData.files || [];
 
       const totalSize = filesList.reduce(
-        (sum: number, file: any) => sum + Number(file?.blob?.size ?? 0),
+        (sum: number, file: ApiFile) => sum + Number(file?.blob?.size ?? 0),
         0,
       );
 
       setFolderSizeBytes(totalSize);
 
-      type ApiFileTag = {
-        tagId?: string;
-        tag?: {
-          id?: string;
-          name?: string;
-          color?: string;
-        };
-      };
-
-      const normalizedFiles = filesList.map((file: any) => ({
+      const normalizedFiles = filesList.map((file: ApiFile) => ({
         id: file.id,
         name: file.filename,
         size: formatSize(file?.blob?.size),
         created: formatDateTime(file.createdAt),
         mimeType: file.mimeType,
         previewUrl: file.previewUrl,
-        tags: ((file.tags || []) as ApiFileTag[])
+        tags: ((file.tags || []) as ApiTagLink[])
           .map((entry) => ({
             id: entry?.tag?.id ?? entry?.tagId,
             name: entry?.tag?.name,
@@ -125,7 +163,7 @@ export default function FolderDetailView({ slug }: { slug: string }) {
   /* FILE CLICK */
   /* -------------------------------- */
 
-  const handleFileClick = (file: any) => {
+  const handleFileClick = (file: NormalizedFile) => {
     setSelectedFile(file);
   };
 
@@ -144,7 +182,7 @@ export default function FolderDetailView({ slug }: { slug: string }) {
   /* normalize folder tags */
 
   const tags =
-    folder?.tags?.map((t: any) => ({
+    folder?.tags?.map((t: ApiTagLink) => ({
       id: t.tag?.id,
       name: t.tag?.name,
       color: t.tag?.color,

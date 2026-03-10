@@ -24,6 +24,29 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { DownloadModal } from "@/components/common/downlaod-modal";
 import { TagLinkModal } from "@/components/common/tag-link-modal";
 
+type FileTagLink = {
+  tag: {
+    id: string;
+    name: string;
+    color: string;
+  };
+};
+
+type FileBlob = {
+  size?: number;
+  mimeType?: string;
+  extension?: string;
+};
+
+type FileDetails = {
+  id: string;
+  filename: string;
+  createdAt?: string;
+  updatedAt?: string;
+  blob?: FileBlob | null;
+  tags?: FileTagLink[];
+};
+
 interface FileDetailsSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -37,7 +60,7 @@ export function FileDetailsSheet({
 }: FileDetailsSheetProps) {
 
   const [downloadOpen, setDownloadOpen] = React.useState(false);
-  const [file, setFile] = React.useState<any | null>(null);
+  const [file, setFile] = React.useState<FileDetails | null>(null);
   const [loading, setLoading] = React.useState(false);
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
   const [tagModalOpen, setTagModalOpen] = React.useState(false);
@@ -82,10 +105,13 @@ export function FileDetailsSheet({
 
     const previous = file;
 
-    setFile((prev: any) => ({
-      ...prev,
-      tags: prev.tags.filter((t: any) => t.tag.id !== tagId),
-    }));
+    setFile((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        tags: (prev.tags || []).filter((t) => t.tag.id !== tagId),
+      };
+    });
 
     try {
       const res = await fetch("/api/user/tags/files", {
@@ -137,7 +163,7 @@ export function FileDetailsSheet({
   const modified = formatDate(file?.updatedAt || file?.createdAt);
 
   const tags =
-    file?.tags?.map((t: any) => ({
+    file?.tags?.map((t) => ({
       id: t.tag.id,
       name: t.tag.name,
       color: t.tag.color,
@@ -249,7 +275,7 @@ export function FileDetailsSheet({
 
               <div className="flex flex-wrap items-center gap-3">
 
-                {tags.map((tag: any) => (
+                {tags.map((tag) => (
 
                   <div
                     key={tag.id}
@@ -341,7 +367,13 @@ function formatSize(bytes?: number) {
   return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`;
 }
 
-function SectionTitle({ icon: Icon, label }: any) {
+function SectionTitle({
+  icon: Icon,
+  label,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+}) {
   return (
     <div className="flex items-center gap-3">
       <div className="p-1.5 rounded-lg bg-primary/10 border border-primary/20">
@@ -354,7 +386,7 @@ function SectionTitle({ icon: Icon, label }: any) {
   );
 }
 
-function InfoRow({ label, value }: any) {
+function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between">
       <span className="text-sm text-zinc-500">{label}</span>

@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.json({ tickets });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error fetching support tickets:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ ticket }, { status: 201 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error creating support ticket:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },

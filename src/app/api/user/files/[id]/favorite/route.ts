@@ -28,7 +28,7 @@ export async function POST(
     });
 
     return NextResponse.json({ file: updated });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error favoriting file:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
@@ -63,7 +63,7 @@ export async function DELETE(
     });
 
     return NextResponse.json({ file: updated });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error unfavoriting file:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },

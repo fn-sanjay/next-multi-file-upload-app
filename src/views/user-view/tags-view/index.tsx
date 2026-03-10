@@ -11,6 +11,9 @@ import { FileDetailsSheet } from "@/components/common/file-details-sheet";
 import { getFileIconMeta } from "@/lib/file-icons";
 import { toast } from "sonner";
 
+const getErrorMessage = (err: unknown, fallback: string) =>
+  err instanceof Error ? err.message : fallback;
+
 interface Tag {
   id: string;
   name: string;
@@ -220,9 +223,9 @@ export default function TagsView() {
       await fetchTags();
       await fetchItems();
       toast.success("Tag deleted successfully");
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      toast.error(err.message || "Failed to delete tag");
+      toast.error(getErrorMessage(err, "Failed to delete tag"));
     }
   };
 

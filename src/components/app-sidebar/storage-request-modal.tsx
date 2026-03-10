@@ -15,6 +15,8 @@ import { toast } from "sonner";
 import { HardDrive, Zap } from "lucide-react";
 
 const OPTIONS_MB = [100, 200, 300];
+const getErrorMessage = (err: unknown, fallback: string) =>
+  err instanceof Error ? err.message : fallback;
 
 interface StorageRequestModalProps {
   open: boolean;
@@ -40,8 +42,8 @@ export const StorageRequestModal = ({
       });
       toast.success("Storage request sent");
       onOpenChange(false);
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to send request");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, "Failed to send request"));
     } finally {
       setSubmitting(false);
     }

@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/server/prisma";
 import { requireAdmin } from "@/lib/server/admin/auth";
 
+type AdminUserRow = {
+  storageUsed: bigint;
+  storageQuota: bigint;
+} & Record<string, unknown>;
+
 export async function GET(request: NextRequest) {
   const auth = await requireAdmin(request);
   if (!auth.ok) return auth.response;
@@ -36,7 +41,7 @@ export async function GET(request: NextRequest) {
   });
 
   return NextResponse.json({
-    users: users.map((u) => ({
+    users: users.map((u: AdminUserRow) => ({
       ...u,
       storageUsed: u.storageUsed.toString(),
       storageQuota: u.storageQuota.toString(),

@@ -6,6 +6,9 @@ import { useMemo, useRef, useState } from "react";
 import { fetchWithRefresh } from "@/lib/client/auth-api";
 import { toast } from "sonner";
 
+const getErrorMessage = (err: unknown, fallback: string) =>
+  err instanceof Error ? err.message : fallback;
+
 export function ProfileHeader() {
   const { user, setUser } = useAuth();
   const [uploading, setUploading] = useState(false);
@@ -59,8 +62,8 @@ export function ProfileHeader() {
                     bio: data.user.bio,
                   });
                   toast.success("Profile image updated");
-                } catch (err: any) {
-                  toast.error(err?.message || "Upload failed");
+                } catch (err: unknown) {
+                  toast.error(getErrorMessage(err, "Upload failed"));
                 } finally {
                   setUploading(false);
                 }

@@ -19,6 +19,9 @@ export type AdminUser = {
   lastLoginAt?: string | null;
 };
 
+const getErrorMessage = (err: unknown, fallback: string) =>
+  err instanceof Error && err.message ? err.message : fallback;
+
 export default function AdminUsersView() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [search, setSearch] = useState("");
@@ -38,8 +41,8 @@ export default function AdminUsersView() {
         (u: AdminUser) => u.role?.toLowerCase() !== "admin",
       );
       setUsers(filtered);
-    } catch (err: any) {
-      toast.error(err?.message || "Unable to load users");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, "Unable to load users"));
     } finally {
       setLoading(false);
     }
@@ -77,8 +80,8 @@ export default function AdminUsersView() {
       );
 
       toast.success("User updated");
-    } catch (err: any) {
-      toast.error(err?.message || "Update failed");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, "Update failed"));
     }
   };
 
@@ -102,8 +105,8 @@ export default function AdminUsersView() {
       }
       setUsers((prev) => prev.filter((u) => u.id !== user.id));
       toast.success("User removed");
-    } catch (err: any) {
-      toast.error(err?.message || "Delete failed");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, "Delete failed"));
     } finally {
       setDeletingId(null);
     }

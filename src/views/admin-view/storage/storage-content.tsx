@@ -32,6 +32,8 @@ export type AdminStorageStats = {
 export function StorageContent() {
   const [stats, setStats] = useState<AdminStorageStats | null>(null);
   const [loading, setLoading] = useState(false);
+  const getErrorMessage = (err: unknown, fallback: string) =>
+    err instanceof Error && err.message ? err.message : fallback;
 
   const loadStats = async () => {
     try {
@@ -47,8 +49,8 @@ export function StorageContent() {
         totalLimitBytes: Number(data.totalLimitBytes ?? 0),
         totalUsedBytes: Number(data.totalUsedBytes ?? 0),
       });
-    } catch (err: any) {
-      toast.error(err?.message || "Unable to fetch storage stats");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, "Unable to fetch storage stats"));
     } finally {
       setLoading(false);
     }
