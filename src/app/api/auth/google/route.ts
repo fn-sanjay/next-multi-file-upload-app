@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
 
   const { verifier, challenge } = createPKCE();
 
-  const redirectUri = `${getBaseUrl(request)}/api/auth/google/callback`;
+  const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/google/callback`;
 
   const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
 
@@ -60,7 +60,6 @@ export async function GET(request: NextRequest) {
     sameSite: "none",
     path: "/",
     maxAge: 600,
-    
   });
 
   response.cookies.set("google_pkce_verifier", verifier, {
@@ -69,7 +68,6 @@ export async function GET(request: NextRequest) {
     sameSite: "none",
     path: "/",
     maxAge: 600,
-    
   });
 
   return response;

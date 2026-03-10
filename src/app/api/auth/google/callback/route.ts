@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const redirectUri = `${getBaseUrl(request)}/api/auth/google/callback`;
+  const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/google/callback`;
 
   // Exchange authorization code for tokens
   const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
