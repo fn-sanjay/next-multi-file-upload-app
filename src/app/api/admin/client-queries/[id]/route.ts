@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/server/prisma";
+import type { Prisma } from "@prisma/client";
 import { requireAdmin } from "@/lib/server/admin/auth";
 import { transporter } from "@/lib/server/auth/email";
 
@@ -53,7 +54,7 @@ export async function PATCH(
       );
     }
 
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const reply = await tx.supportReply.create({
         data: {
           ticketId: id,
