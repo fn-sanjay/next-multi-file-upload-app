@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/server/prisma";
 import { requireAdmin } from "@/lib/server/admin/auth";
 
+type UserStorageRow = {
+  id: string;
+  name: string | null;
+  email: string;
+  storageQuota: bigint;
+};
+
 const categorize = (
   mime: string | null | undefined,
 ): "images" | "video" | "docs" | "audio" | "others" => {
@@ -94,11 +101,11 @@ export async function GET(request: NextRequest) {
       usage.others.bytes;
 
     const totalLimitBytes = users.reduce(
-      (acc, u) => acc + Number(u.storageQuota ?? 0),
+      (acc: number, u: UserStorageRow) => acc + Number(u.storageQuota ?? 0),
       0,
     );
 
-    const usersWithUsage = users.map((u) => {
+    const usersWithUsage = users.map((u: UserStorageRow) => {
       const agg = perUser[u.id] || { bytes: 0, count: 0, deletedBytes: 0 };
       return {
         id: u.id,
