@@ -90,7 +90,8 @@ export async function POST(request: NextRequest) {
 
       const destination = destinationFolderId ?? null;
 
-      const existingNames = await prisma.file.findMany({
+      const existingNames: Array<{ filename: string }> =
+        await prisma.file.findMany({
         where: {
           userId: payload.sub,
           folderId: destination,
