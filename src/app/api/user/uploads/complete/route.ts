@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/server/prisma";
+import { prisma, type TransactionClient } from "@/lib/server/prisma";
 import { getAuthPayload } from "@/lib/server/auth/auth";
 import { supabaseAdmin } from "@/lib/supabase/supabase-admin";
 import mime from "mime";
@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
     /* 7️⃣ Save DB records */
     /* ------------------------- */
 
-    const file = await prisma.$transaction(async (tx) => {
+    const file = await prisma.$transaction(async (tx: TransactionClient) => {
       const blob = await tx.fileBlob.create({
         data: {
           id: blobId,

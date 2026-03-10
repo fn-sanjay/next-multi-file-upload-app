@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/server/prisma";
+import { prisma, type TransactionClient } from "@/lib/server/prisma";
 import { getAuthPayload } from "@/lib/server/auth/auth";
 import { uploadInitSchema } from "@/lib/validations/upload";
 
@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
 
   if (existingBlob) {
     // If deduplicated, skip chunking. We must actively create the file record and increment the reference.
-    const fileRecord = await prisma.$transaction(async (tx) => {
+    const fileRecord = await prisma.$transaction(async (tx: TransactionClient) => {
       const newFile = await tx.file.create({
         data: {
           filename,

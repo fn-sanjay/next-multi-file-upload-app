@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/server/prisma";
+import { prisma, type TransactionClient } from "@/lib/server/prisma";
 import { getAuthPayload } from "@/lib/server/auth/auth";
 import {
   collectDescendantFolderIds,
@@ -152,7 +152,7 @@ export async function DELETE(
     if (existingFolder.deletedAt) {
       const folderIds = await collectDescendantFolderIds(prisma, id, payload.sub);
 
-      await prisma.$transaction((tx) =>
+      await prisma.$transaction((tx: TransactionClient) =>
         deleteFolderTreePermanently(tx, folderIds, payload.sub),
       );
 

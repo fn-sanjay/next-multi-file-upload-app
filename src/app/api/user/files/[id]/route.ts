@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/server/prisma";
+import { prisma, type TransactionClient } from "@/lib/server/prisma";
 import { getAuthPayload } from "@/lib/server/auth/auth";
 import { deleteFilePermanently } from "@/lib/server/trash";
 
@@ -147,7 +147,7 @@ export async function DELETE(
     }
 
     if (existingFile.deletedAt) {
-      await prisma.$transaction((tx) =>
+      await prisma.$transaction((tx: TransactionClient) =>
         deleteFilePermanently(tx, {
           id,
           blobId: existingFile.blobId,

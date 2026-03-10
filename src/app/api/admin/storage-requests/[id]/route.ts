@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/server/prisma";
+import { prisma, type TransactionClient } from "@/lib/server/prisma";
 import { requireAdmin } from "@/lib/server/admin/auth";
 
 const updateRequestSchema = z.object({
@@ -64,7 +64,7 @@ export async function PATCH(
     }
 
     // APPROVE request
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: TransactionClient) => {
       const updatedRequest = await tx.storageRequest.update({
         where: { id },
         data: {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/server/prisma";
+import { prisma, type TransactionClient } from "@/lib/server/prisma";
 import { getAuthPayload } from "@/lib/server/auth/auth";
 
 const replyTicketSchema = z.object({
@@ -79,7 +79,7 @@ export async function POST(
       );
     }
 
-    const reply = await prisma.$transaction(async (tx) => {
+    const reply = await prisma.$transaction(async (tx: TransactionClient) => {
       const newReply = await tx.supportReply.create({
         data: {
           ticketId: id,
