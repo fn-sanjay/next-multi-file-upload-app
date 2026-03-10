@@ -153,7 +153,9 @@ export async function POST(request: NextRequest) {
               userId: payload.sub,
               tags: {
                 createMany: {
-                  data: file.tags.map((tag) => ({ tagId: tag.tagId })),
+                  data: file.tags.map((tag: (typeof file.tags)[number]) => ({
+                    tagId: tag.tagId,
+                  })),
                   skipDuplicates: true,
                 },
               },
@@ -289,7 +291,9 @@ export async function POST(request: NextRequest) {
                 userId: payload.sub,
                 tags: {
                   createMany: {
-                    data: file.tags.map((tag) => ({ tagId: tag.tagId })),
+                    data: file.tags.map((tag: (typeof file.tags)[number]) => ({
+                      tagId: tag.tagId,
+                    })),
                     skipDuplicates: true,
                   },
                 },
