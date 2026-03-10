@@ -7,6 +7,13 @@ const querySchema = z.object({
   status: z.enum(["all", "PENDING", "APPROVED", "REJECTED"]).optional(),
 });
 
+type StorageRequestWithUser = {
+  requestedQuota: bigint;
+  user: {
+    storageQuota: bigint;
+  } & Record<string, unknown>;
+} & Record<string, unknown>;
+
 export async function GET(request: NextRequest) {
   const auth = await requireAdmin(request);
   if (!auth.ok) return auth.response;
@@ -39,7 +46,7 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: "desc" },
     });
 
-    const formatted = requests.map((r) => ({
+    const formatted = requests.map((r: StorageRequestWithUser) => ({
       ...r,
       requestedQuota: r.requestedQuota.toString(),
       user: {

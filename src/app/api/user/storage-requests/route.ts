@@ -3,6 +3,10 @@ import { prisma } from "@/lib/server/prisma";
 import { getAuthPayload } from "@/lib/server/auth/auth";
 import { createStorageRequestSchema } from "@/lib/validations/storage-requests";
 
+type StorageRequestRecord = {
+  requestedQuota: bigint;
+} & Record<string, unknown>;
+
 export async function GET(request: NextRequest) {
   const payload = await getAuthPayload(request);
 
@@ -20,7 +24,7 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    const formatted = requests.map((r) => ({
+    const formatted = requests.map((r: StorageRequestRecord) => ({
       ...r,
       requestedQuota: r.requestedQuota.toString(),
     }));
