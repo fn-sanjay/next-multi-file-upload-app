@@ -9,6 +9,12 @@ type FolderNode = {
   children: FolderNode[];
 };
 
+type FolderRow = {
+  id: string;
+  name: string;
+  parentId: string | null;
+};
+
 export async function GET(request: NextRequest) {
   const payload = await getAuthPayload(request);
 
@@ -17,7 +23,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const folders = await prisma.folder.findMany({
+    const folders: FolderRow[] = await prisma.folder.findMany({
       where: {
         userId: payload.sub,
         deletedAt: null,
