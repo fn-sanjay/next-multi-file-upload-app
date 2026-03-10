@@ -21,12 +21,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const {
-      action,
-      files = [],
-      folders = [],
-      destinationFolderId,
-    } = parsed.data;
+    const { action, files = [], folders = [], destinationFolderId } = parsed.data;
 
     const validateDestinationFolder = async () => {
       if (destinationFolderId === undefined) {
@@ -84,9 +79,7 @@ export async function POST(request: NextRequest) {
         }),
       ]);
 
-      return NextResponse.json({
-        message: "Items moved successfully",
-      });
+      return NextResponse.json({ message: "Items moved successfully" });
     }
 
     if (action === "copy") {
@@ -95,14 +88,13 @@ export async function POST(request: NextRequest) {
 
       const destination = destinationFolderId ?? null;
 
-      const existingNames: Array<{ filename: string }> =
-        await prisma.file.findMany({
-          where: {
-            userId: payload.sub,
-            folderId: destination,
-          },
-          select: { filename: true },
-        });
+      const existingNames: { filename: string }[] = await prisma.file.findMany({
+        where: {
+          userId: payload.sub,
+          folderId: destination,
+        },
+        select: { filename: true },
+      });
 
       const nameSet = new Set(existingNames.map((f) => f.filename));
 
@@ -124,10 +116,12 @@ export async function POST(request: NextRequest) {
         const { base, ext } = splitName(original);
         let counter = 1;
         let candidate = `${base} (copy)${ext}`;
+
         while (nameSet.has(candidate)) {
-          counter += 1;
+          counter++;
           candidate = `${base} (copy ${counter})${ext}`;
         }
+
         nameSet.add(candidate);
         return candidate;
       };
@@ -143,8 +137,10 @@ export async function POST(request: NextRequest) {
         },
       });
 
+      type SourceFile = (typeof sourceFiles)[number];
+
       await prisma.$transaction(
-        sourceFiles.map((file: (typeof sourceFiles)[number]) =>
+        sourceFiles.map((file: SourceFile) =>
           prisma.file.create({
             data: {
               filename: getCopyName(file.filename),
@@ -164,18 +160,26 @@ export async function POST(request: NextRequest) {
         ),
       );
 
-      // Copy folders (shallow tree copy with files and tags)
       const folderNameCache = new Map<string | null, Set<string>>();
 
       const getFolderNameSet = async (parentId: string | null) => {
-        if (folderNameCache.has(parentId))
+        if (folderNameCache.has(parentId)) {
           return folderNameCache.get(parentId)!;
-        const foldersAtDest = await prisma.folder.findMany({
-          where: { userId: payload.sub, parentId, deletedAt: null },
+        }
+
+        const foldersAtDest: { name: string }[] = await prisma.folder.findMany({
+          where: {
+            userId: payload.sub,
+            parentId,
+            deletedAt: null,
+          },
           select: { name: true },
         });
+
         const set = new Set(foldersAtDest.map((f) => f.name));
+
         folderNameCache.set(parentId, set);
+
         return set;
       };
 
@@ -191,18 +195,24 @@ export async function POST(request: NextRequest) {
         original: string,
       ) => {
         const set = await getFolderNameSet(parentId);
+
         if (!set.has(original)) {
           set.add(original);
           return original;
         }
+
         const { base } = splitFolderName(original);
+
         let counter = 1;
         let candidate = `${base} (copy)`;
+
         while (set.has(candidate)) {
-          counter += 1;
+          counter++;
           candidate = `${base} (copy ${counter})`;
         }
+
         set.add(candidate);
+
         return candidate;
       };
 
@@ -235,14 +245,17 @@ export async function POST(request: NextRequest) {
             userId: payload.sub,
             tags: {
               createMany: {
-                data: sourceFolder.tags.map((t) => ({ tagId: t.tagId })),
+                data: sourceFolder.tags.map(
+                  (t: (typeof sourceFolder.tags)[number]) => ({
+                    tagId: t.tagId,
+                  }),
+                ),
                 skipDuplicates: true,
               },
             },
           },
         });
 
-        // copy files directly under this folder
         const filesInFolder = await prisma.file.findMany({
           where: {
             folderId: sourceFolder.id,
@@ -254,38 +267,13 @@ export async function POST(request: NextRequest) {
           },
         });
 
-        const fileNameSet = new Set<string>();
-
-        const splitFileName = (filename: string) => {
-          const lastDot = filename.lastIndexOf(".");
-          if (lastDot <= 0) return { base: filename, ext: "" };
-          return {
-            base: filename.slice(0, lastDot),
-            ext: filename.slice(lastDot),
-          };
-        };
-
-        const getFileCopyName = (original: string) => {
-          if (!fileNameSet.has(original)) {
-            fileNameSet.add(original);
-            return original;
-          }
-          const { base, ext } = splitFileName(original);
-          let counter = 1;
-          let candidate = `${base} (copy)${ext}`;
-          while (fileNameSet.has(candidate)) {
-            counter += 1;
-            candidate = `${base} (copy ${counter})${ext}`;
-          }
-          fileNameSet.add(candidate);
-          return candidate;
-        };
+        type FolderFile = (typeof filesInFolder)[number];
 
         await prisma.$transaction(
-          filesInFolder.map((file) =>
+          filesInFolder.map((file: FolderFile) =>
             prisma.file.create({
               data: {
-                filename: getFileCopyName(file.filename),
+                filename: file.filename,
                 blobId: file.blobId,
                 folderId: createdFolder.id,
                 userId: payload.sub,
