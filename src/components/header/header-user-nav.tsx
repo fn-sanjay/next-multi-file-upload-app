@@ -1,7 +1,6 @@
 "use client";
 
-import React from "react";
-import { Bell, User, Settings, LogOut, Sun, Moon } from "lucide-react";
+import { User, LogOut } from "lucide-react";
 import Link from "next/link";
 import {
   DropdownMenu,
@@ -17,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/providers/auth-provider";
 
 export const HeaderUserNav = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, isAdmin } = useAuth();
 
   if (!user) return null;
   const avatarUrl = user.profileImage || user.avatar || undefined;
@@ -52,15 +51,16 @@ export const HeaderUserNav = () => {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator className="bg-zinc-800" />
-          <DropdownMenuGroup>
-            <Link href="/profile">
-              <DropdownMenuItem className="focus:bg-zinc-900 focus:text-white cursor-pointer gap-2">
-                <User className="size-4" />
-                <span>Profile</span>
-              </DropdownMenuItem>
-            </Link>
-           
-          </DropdownMenuGroup>
+          {!isAdmin && (
+            <DropdownMenuGroup>
+              <Link href="/profile">
+                <DropdownMenuItem className="focus:bg-zinc-900 focus:text-white cursor-pointer gap-2">
+                  <User className="size-4" />
+                  <span>Profile</span>
+                </DropdownMenuItem>
+              </Link>
+            </DropdownMenuGroup>
+          )}
           <DropdownMenuSeparator className="bg-zinc-800" />
           <DropdownMenuItem
             onClick={() => signOut()}
