@@ -1,11 +1,12 @@
 import { randomBytes, createHash } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 
-const secure = process.env.NODE_ENV === "production";
 
 function getBaseUrl(req: NextRequest): string {
-  return process.env.NEXT_PUBLIC_APP_URL ??
-    `${req.nextUrl.protocol}//${req.headers.get("host")}`;
+  return (
+    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ??
+    `https://${req.headers.get("host")}`
+  );
 }
 
 function base64url(buffer: Buffer) {
@@ -59,7 +60,7 @@ export async function GET(request: NextRequest) {
   response.cookies.set("google_oauth_state", state, {
     httpOnly: true,
     secure: true,
-    sameSite: "lax",
+    sameSite: "none",
     path: "/",
     maxAge: 600,
   });
@@ -67,7 +68,7 @@ export async function GET(request: NextRequest) {
   response.cookies.set("google_pkce_verifier", verifier, {
     httpOnly: true,
     secure: true,
-    sameSite: "lax",
+    sameSite: "none",
     path: "/",
     maxAge: 600,
   });
