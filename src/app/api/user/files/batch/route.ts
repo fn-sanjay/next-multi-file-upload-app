@@ -17,17 +17,22 @@ export async function POST(request: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json(
         { error: "Invalid request", details: parsed.error.format() },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const { action, files = [], folders = [], destinationFolderId } = parsed.data;
+    const {
+      action,
+      files = [],
+      folders = [],
+      destinationFolderId,
+    } = parsed.data;
 
     const validateDestinationFolder = async () => {
       if (destinationFolderId === undefined) {
         return NextResponse.json(
           { error: "destinationFolderId required" },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -43,7 +48,7 @@ export async function POST(request: NextRequest) {
         if (!folder) {
           return NextResponse.json(
             { error: "Destination folder not found" },
-            { status: 404 }
+            { status: 404 },
           );
         }
       }
@@ -92,19 +97,22 @@ export async function POST(request: NextRequest) {
 
       const existingNames: Array<{ filename: string }> =
         await prisma.file.findMany({
-        where: {
-          userId: payload.sub,
-          folderId: destination,
-        },
-        select: { filename: true },
-      });
+          where: {
+            userId: payload.sub,
+            folderId: destination,
+          },
+          select: { filename: true },
+        });
 
       const nameSet = new Set(existingNames.map((f) => f.filename));
 
       const splitName = (filename: string) => {
         const lastDot = filename.lastIndexOf(".");
         if (lastDot <= 0) return { base: filename, ext: "" };
-        return { base: filename.slice(0, lastDot), ext: filename.slice(lastDot) };
+        return {
+          base: filename.slice(0, lastDot),
+          ext: filename.slice(lastDot),
+        };
       };
 
       const getCopyName = (original: string) => {
@@ -136,7 +144,7 @@ export async function POST(request: NextRequest) {
       });
 
       await prisma.$transaction(
-        sourceFiles.map((file) =>
+        sourceFiles.map((file: (typeof sourceFiles)[number]) =>
           prisma.file.create({
             data: {
               filename: getCopyName(file.filename),
@@ -158,7 +166,8 @@ export async function POST(request: NextRequest) {
       const folderNameCache = new Map<string | null, Set<string>>();
 
       const getFolderNameSet = async (parentId: string | null) => {
-        if (folderNameCache.has(parentId)) return folderNameCache.get(parentId)!;
+        if (folderNameCache.has(parentId))
+          return folderNameCache.get(parentId)!;
         const foldersAtDest = await prisma.folder.findMany({
           where: { userId: payload.sub, parentId, deletedAt: null },
           select: { name: true },
@@ -175,7 +184,10 @@ export async function POST(request: NextRequest) {
         return { base };
       };
 
-      const getFolderCopyName = async (parentId: string | null, original: string) => {
+      const getFolderCopyName = async (
+        parentId: string | null,
+        original: string,
+      ) => {
         const set = await getFolderNameSet(parentId);
         if (!set.has(original)) {
           set.add(original);
@@ -245,7 +257,10 @@ export async function POST(request: NextRequest) {
         const splitFileName = (filename: string) => {
           const lastDot = filename.lastIndexOf(".");
           if (lastDot <= 0) return { base: filename, ext: "" };
-          return { base: filename.slice(0, lastDot), ext: filename.slice(lastDot) };
+          return {
+            base: filename.slice(0, lastDot),
+            ext: filename.slice(lastDot),
+          };
         };
 
         const getFileCopyName = (original: string) => {
@@ -307,13 +322,12 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ message: "Batch operation completed" });
-
   } catch (error) {
     console.error("Batch operation error:", error);
 
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
