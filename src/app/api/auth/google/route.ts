@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
 
   response.cookies.set("google_oauth_state", state, {
     httpOnly: true,
-    secure,
+    secure: true,
     sameSite: "lax",
     path: "/",
     maxAge: 600,
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
 
   response.cookies.set("google_pkce_verifier", verifier, {
     httpOnly: true,
-    secure,
+    secure: true,
     sameSite: "lax",
     path: "/",
     maxAge: 600,
