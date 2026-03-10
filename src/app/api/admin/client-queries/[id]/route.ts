@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/server/prisma";
-import type { Prisma } from "@prisma/client";
 import { requireAdmin } from "@/lib/server/admin/auth";
 import { transporter } from "@/lib/server/auth/email";
 
@@ -54,25 +53,22 @@ export async function PATCH(
       );
     }
 
-    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-      const reply = await tx.supportReply.create({
+    const [reply, updatedTicket] = await prisma.$transaction([
+      prisma.supportReply.create({
         data: {
           ticketId: id,
           userId: auth.adminId, // admin replying
           message: parsed.data.reply,
         },
-      });
-
-      const updatedTicket = await tx.supportTicket.update({
+      }),
+      prisma.supportTicket.update({
         where: { id },
         data: {
           status: parsed.data.close ? "CLOSED" : ticket.status,
           updatedAt: new Date(),
         },
-      });
-
-      return { reply, updatedTicket };
-    });
+      }),
+    ]);
 
     // fire-and-forget email to user
     try {
@@ -97,8 +93,8 @@ export async function PATCH(
     }
 
     return NextResponse.json({
-      ticket: result.updatedTicket,
-      reply: result.reply,
+      ticket: updatedTicket,
+      reply,
     });
   } catch (error) {
     console.error("Admin reply error:", error);
