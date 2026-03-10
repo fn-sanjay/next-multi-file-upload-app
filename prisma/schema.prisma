@@ -1,0 +1,421 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum AuthProvider {
+  CREDENTIALS
+  GOOGLE
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum TicketStatus {
+  OPEN
+  CLOSED
+}
+
+enum SharePermission {
+  VIEW
+  EDIT
+}
+
+model User {
+  id       String       @id @default(uuid())
+  name     String?
+  email    String       @unique
+  password String?
+  provider AuthProvider @default(CREDENTIALS)
+  role     Role         @default(USER)
+
+  bio           String?
+  profileImage  String?
+  emailVerified DateTime?
+
+  storageUsed  BigInt @default(0)
+  storageQuota BigInt @default(100000000)
+
+  isReadOnly Boolean @default(false) // cannot upload
+  isBanned   Boolean @default(false)
+
+  lastLoginAt  DateTime?
+  lastActiveAt DateTime?
+
+  deletedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  files          File[]
+  folders        Folder[]
+  tags           Tag[]
+  uploadSessions UploadSession[]
+
+  refreshTokens           RefreshToken[]
+  passwordResetTokens     PasswordResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
+
+  ownedShares    Share[] @relation("OwnerShares")
+  receivedShares Share[] @relation("ReceivedShares")
+
+  approvedRequests StorageRequest[] @relation("StorageApprovals")
+
+  storageRequests StorageRequest[] @relation("UserStorageRequests")
+
+  supportTickets SupportTicket[]
+  supportReplies SupportReply[]
+
+  recentAccess RecentAccess[]
+
+  adminLogs AdminLog[] @relation("AdminLogs")
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  tokenHash String    @unique
+  userAgent String?
+  ipAddress String?
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model StorageConfig {
+  id               String   @id @default(uuid())
+  defaultUserQuota BigInt
+  autoExpand       Boolean  @default(false)
+  maxUserQuota     BigInt
+  totalCapacity    BigInt
+  updatedAt        DateTime @updatedAt
+}
+
+model StorageStats {
+  id          String   @id @default(uuid())
+  totalUsed   BigInt
+  imagesSize  BigInt
+  videosSize  BigInt
+  docsSize    BigInt
+  othersSize  BigInt
+  nodesActive Int
+  nodesTotal  Int
+  updatedAt   DateTime @updatedAt
+}
+
+model Folder {
+  id   String @id @default(uuid())
+  name String
+
+  parentId String?
+  parent   Folder?  @relation("FolderHierarchy", fields: [parentId], references: [id])
+  children Folder[] @relation("FolderHierarchy")
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  files File[]
+
+  isFavorite Boolean @default(false)
+
+  tags         FolderTag[]
+  shares       Share[]
+  recentAccess RecentAccess[]
+
+  deletedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([parentId])
+  @@index([userId, parentId])
+}
+
+model File {
+  id String @id @default(uuid())
+
+  filename String
+
+  blobId String
+  blob   FileBlob @relation(fields: [blobId], references: [id])
+
+  folderId String?
+  folder   Folder? @relation(fields: [folderId], references: [id])
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  isFavorite Boolean @default(false)
+  isPinned   Boolean @default(false)
+
+  tags FileTag[]
+
+  shares Share[]
+  recent RecentAccess[]
+
+  deletedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@unique([folderId, filename, userId])
+  @@index([userId])
+  @@index([folderId])
+}
+
+model UploadSession {
+  id String @id @default(uuid())
+
+  filename String
+  size     BigInt
+  hash     String
+
+  uploadedBytes BigInt @default(0)
+
+  completed Boolean @default(false)
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  folderId String?
+
+  chunks UploadChunk[]
+
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+
+  @@index([hash])
+  @@index([userId])
+}
+
+model UploadChunk {
+  id String @id @default(uuid())
+
+  partNumber Int
+  size       Int
+
+  upload   UploadSession @relation(fields: [uploadId], references: [id])
+  uploadId String
+
+  createdAt DateTime @default(now())
+
+  @@index([uploadId])
+}
+
+model Tag {
+  id    String @id @default(uuid())
+  name  String
+  color String
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  files   FileTag[]
+  folders FolderTag[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, name])
+  @@index([userId])
+}
+
+model FileTag {
+  fileId String
+  tagId  String
+
+  file File @relation(fields: [fileId], references: [id])
+  tag  Tag  @relation(fields: [tagId], references: [id])
+
+  @@id([fileId, tagId])
+}
+
+model FolderTag {
+  folderId String
+  tagId    String
+
+  folder Folder @relation(fields: [folderId], references: [id])
+  tag    Tag    @relation(fields: [tagId], references: [id])
+
+  @@id([folderId, tagId])
+}
+
+model Share {
+  id String @id @default(uuid())
+
+  ownerId String
+  owner   User @relation("OwnerShares", fields: [ownerId], references: [id])
+
+  sharedWithId String
+  sharedWith   User @relation("ReceivedShares", fields: [sharedWithId], references: [id])
+
+  fileId String?
+  file   File? @relation(fields: [fileId], references: [id])
+
+  folderId String?
+  folder   Folder? @relation(fields: [folderId], references: [id])
+
+  permission SharePermission @default(VIEW)
+
+  token String @unique
+
+  expiresAt DateTime?
+  cancelledAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([ownerId])
+  @@index([sharedWithId])
+}
+
+model RecentAccess {
+  id String @id @default(uuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  fileId String?
+  file   File?   @relation(fields: [fileId], references: [id])
+
+  folderId String?
+  folder   Folder? @relation(fields: [folderId], references: [id])
+
+  accessedAt DateTime @default(now())
+
+  @@unique([userId, fileId])
+  @@unique([userId, folderId])
+
+  @@index([userId])
+  @@index([userId, accessedAt])
+}
+
+model FileBlob {
+  id String @id @default(uuid())
+
+  hash      String @unique
+  size      Int
+  mimeType  String
+  extension String
+
+  storageKey String
+
+  refCount Int @default(1)
+
+  files        File[]
+  thumbnailKey String?
+
+  createdAt DateTime @default(now())
+
+  @@index([storageKey])
+}
+
+model AdminLog {
+  id String @id @default(uuid())
+
+  adminId String
+  admin   User   @relation("AdminLogs", fields: [adminId], references: [id])
+
+  action   String
+  targetId String?
+
+  metadata Json?
+
+  createdAt DateTime @default(now())
+}
+
+model StorageRequest {
+  id String @id @default(uuid())
+
+  userId String
+  user   User   @relation("UserStorageRequests", fields: [userId], references: [id])
+
+  requestedQuota BigInt
+  reason         String?
+
+  status RequestStatus @default(PENDING)
+
+  approvedById String?
+  approvedBy   User?     @relation("StorageApprovals", fields: [approvedById], references: [id])
+  approvedAt   DateTime?
+
+  createdAt DateTime @default(now())
+}
+
+model SupportTicket {
+  id String @id @default(uuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  subject String
+  message String
+
+  status TicketStatus @default(OPEN)
+
+  replies SupportReply[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SupportReply {
+  id String @id @default(uuid())
+
+  ticketId String
+  ticket   SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  message String
+
+  createdAt DateTime @default(now())
+}

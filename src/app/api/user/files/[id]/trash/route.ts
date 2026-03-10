@@ -1,0 +1,81 @@
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/server/prisma";
+import { getAuthPayload } from "@/lib/server/auth/auth";
+
+// Move to trash
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const payload = await getAuthPayload(request);
+  if (!payload) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { id } = await params;
+
+  try {
+    const file = await prisma.file.findFirst({
+      where: { id, userId: payload.sub, deletedAt: null },
+    });
+
+    if (!file) {
+      return NextResponse.json({ error: "File not found" }, { status: 404 });
+    }
+
+    const updated = await prisma.file.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
+
+    return NextResponse.json({
+      message: "File moved to trash",
+      file: updated,
+    });
+  } catch (error: unknown) {
+    console.error("Error moving file to trash:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
+  }
+}
+
+// Restore from trash
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const payload = await getAuthPayload(request);
+  if (!payload) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { id } = await params;
+
+  try {
+    const file = await prisma.file.findFirst({
+      where: { id, userId: payload.sub, deletedAt: { not: null } },
+    });
+
+    if (!file) {
+      return NextResponse.json(
+        { error: "Trashed file not found" },
+        { status: 404 },
+      );
+    }
+
+    const updated = await prisma.file.update({
+      where: { id },
+      data: { deletedAt: null },
+    });
+
+    return NextResponse.json({ message: "File restored", file: updated });
+  } catch (error: unknown) {
+    console.error("Error restoring file:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
+  }
+}

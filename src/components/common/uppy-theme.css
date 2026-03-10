@@ -1,0 +1,114 @@
+@layer components {
+  .uppy-Dashboard-inner {
+    @apply bg-transparent! border-0! rounded-2xl! font-sans! shadow-none!;
+  }
+
+  .uppy-Dashboard-AddFiles {
+    @apply bg-transparent! border! border-dashed! border-white/10! rounded-2xl! m-0!;
+  }
+
+  .uppy-Dashboard-AddFiles:hover {
+    @apply bg-primary/5! border-primary!;
+  }
+
+  .uppy-Dashboard-browse {
+    @apply text-primary! font-bold!;
+  }
+
+  .uppy-Dashboard-AddFiles-title {
+    @apply text-[#fafafa]! text-xl! font-bold!;
+  }
+
+  .uppy-Dashboard-AddFiles-info {
+    @apply text-muted-foreground!;
+  }
+
+  .uppy-DashboardTabs {
+    @apply border-b! border-white/5! px-2!;
+  }
+
+  .uppy-Dashboard-Item {
+    @apply bg-white/5! border! border-white/5! rounded-xl! mb-2!;
+  }
+
+  .uppy-Dashboard-Item-name {
+    @apply text-[#fafafa]! font-semibold!;
+  }
+
+  .uppy-Dashboard-Item-status {
+    @apply text-muted-foreground!;
+  }
+
+  .uppy-StatusBar {
+    @apply bg-[#09090b]! border-t! border-white/5! font-sans!;
+  }
+
+  .uppy-StatusBar-progress {
+    @apply bg-primary!;
+  }
+
+  .uppy-StatusBar-actionCircle--upload {
+    @apply fill-black! bg-primary!;
+  }
+
+  .uppy-StatusBar.is-waiting .uppy-StatusBar-actionBtn--upload {
+    @apply text-black! bg-primary! rounded-xl! py-2! px-6! font-bold! transition-all! shadow-[0_0_20px_rgba(191,255,0,0.2)]!;
+  }
+
+  .uppy-StatusBar.is-waiting .uppy-StatusBar-actionBtn--upload:hover {
+    @apply bg-[#a6e600]! -translate-y-px!;
+  }
+
+  .uppy-u-reset.uppy-c-btn.uppy-c-btn-primary.uppy-Dashboard-uploadBtn {
+    @apply text-black! bg-primary! rounded-xl! font-bold!;
+  }
+
+  .uppy-DashboardContent-back {
+    @apply text-primary!;
+  }
+
+  .uppy-DashboardContent-save {
+    @apply text-black! bg-primary! rounded-lg!;
+  }
+
+  .uppy-Dashboard-files {
+    scrollbar-width: thin;
+    scrollbar-color: #27272a transparent;
+  }
+
+  .uppy-Dashboard-AddFiles-list {
+    @apply p-0!;
+  }
+
+  .uppy-Dashboard-Item-previewInner--file svg {
+    @apply fill-primary!;
+  }
+
+  .uppy-Dashboard-Item-previewIconWrap svg {
+    @apply text-primary!;
+  }
+
+  .uppy-DashboardContent-panel {
+    @apply font-sans! bg-[#09090b]!;
+  }
+
+  .uppy-DashboardContent-title {
+    @apply text-[#fafafa]!;
+  }
+
+  .uppy-Dashboard-FileCard {
+    @apply bg-[#09090b]!;
+  }
+
+  .uppy-Dashboard-FileCard-label {
+    @apply text-[#71717a]!;
+  }
+
+  .uppy-Dashboard-FileCard-input {
+    @apply text-white! bg-white/5! border! border-white/10! rounded-lg!;
+  }
+
+  .uppy-Dashboard-FileCard-input:focus {
+    @apply border-primary! outline-none!;
+  }
+}
