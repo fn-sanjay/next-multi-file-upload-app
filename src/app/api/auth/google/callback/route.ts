@@ -63,10 +63,10 @@ export async function GET(request: NextRequest) {
   });
 
   if (!tokenRes.ok) {
-    return NextResponse.json(
-      { error: "Google token exchange failed" },
-      { status: 400 },
-    );
+    const err = await tokenRes.text();
+    console.error("GOOGLE TOKEN ERROR:", err);
+
+    return NextResponse.json({ error: err }, { status: 400 });
   }
 
   const tokens = await tokenRes.json();
