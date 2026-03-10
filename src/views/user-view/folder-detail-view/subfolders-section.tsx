@@ -13,8 +13,8 @@ interface SubfoldersSectionProps {
     id: string;
     slug?: string;
     name: string;
-    createdAt?: string;
-    updatedAt?: string;
+    createdAt?: string | null;
+    updatedAt?: string | null;
     tags?: Array<{ tag?: { name?: string } }>;
     _count?: {
       files?: number;
@@ -125,7 +125,7 @@ export function SubfoldersSection({
   );
 }
 
-function formatFolderTime(value?: string) {
+function formatFolderTime(value?: string | null) {
   if (!value) return "Unknown";
 
   const date = new Date(value);

@@ -62,13 +62,17 @@ export const SearchModal = ({ isOpen, setIsOpen }: SearchModalProps) => {
           folders?: SearchFolder[];
           tags?: SearchTag[];
         };
+        const mappedFiles = (data.files || [])
+          .map((f) => ({
+            id: f.id ?? "",
+            filename: f.filename ?? "",
+            folderId: f.folderId ?? null,
+          }))
+          .filter(
+            (f): f is SearchFile => Boolean(f.id) && Boolean(f.filename),
+          );
         setResults({
-          files:
-            (data.files || []).map((f) => ({
-              id: f.id,
-              filename: f.filename,
-              folderId: f.folderId ?? null,
-            })) || [],
+          files: mappedFiles,
           folders: data.folders || [],
           tags: data.tags || [],
         });

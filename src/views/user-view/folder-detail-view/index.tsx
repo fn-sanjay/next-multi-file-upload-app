@@ -137,6 +137,10 @@ export default function FolderDetailView({ slug }: { slug: string }) {
   /* -------------------------------- */
 
   const handleRemoveTag = async (tagId: string) => {
+    if (!folder) {
+      console.warn("Tag remove skipped: folder not loaded yet.");
+      return;
+    }
 
     try {
 
@@ -182,11 +186,16 @@ export default function FolderDetailView({ slug }: { slug: string }) {
   /* normalize folder tags */
 
   const tags =
-    folder?.tags?.map((t: ApiTagLink) => ({
-      id: t.tag?.id,
-      name: t.tag?.name,
-      color: t.tag?.color,
-    })) || [];
+    folder?.tags
+      ?.map((t: ApiTagLink) => ({
+        id: t.tag?.id,
+        name: t.tag?.name,
+        color: t.tag?.color,
+      }))
+      .filter(
+        (t): t is { id: string; name: string; color: string } =>
+          !!t.id && !!t.name && !!t.color
+      ) || [];
 
   return (
     <div className="flex-1 flex flex-col h-full bg-background overflow-hidden font-sans">
@@ -225,7 +234,7 @@ export default function FolderDetailView({ slug }: { slug: string }) {
       <FileDetailsSheet
         open={!!selectedFile}
         onOpenChange={() => setSelectedFile(null)}
-        fileId={selectedFile?.id}
+        fileId={selectedFile?.id ?? null}
       />
 
       <TagLinkModal

@@ -13,7 +13,7 @@ interface FolderDetailHeaderProps {
     name: string;
     files?: Array<{ id?: string }>;
     children?: Array<{ id?: string }>;
-    updatedAt?: string;
+    updatedAt?: string | null;
   };
   folderSizeBytes: number;
 }

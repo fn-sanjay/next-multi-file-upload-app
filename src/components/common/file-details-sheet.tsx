@@ -114,6 +114,9 @@ export function FileDetailsSheet({
     });
 
     try {
+      if (!file) {
+        throw new Error("File not loaded");
+      }
       const res = await fetch("/api/user/tags/files", {
         method: "DELETE",
         headers: {
@@ -330,7 +333,7 @@ export function FileDetailsSheet({
                 }
               }}
               fileId={file.id}
-              existingTags={file.tags}
+              existingTags={file.tags ?? []}
             />
 
           </div>

@@ -8,22 +8,22 @@ import { openContextMenuFromButton } from "@/lib/open-context-menu";
 
 interface FilesSectionProps {
   files: Array<{
-    id?: string;
-    name?: string;
-    size?: string;
-    created?: string;
-    tags?: Array<{
+    id: string;
+    name: string;
+    size: string;
+    created: string;
+    tags: Array<{
       id?: string;
       name?: string;
       color?: string;
     }>;
   }>;
   onSelectFile: (file: {
-    id?: string;
-    name?: string;
-    size?: string;
-    created?: string;
-    tags?: Array<{
+    id: string;
+    name: string;
+    size: string;
+    created: string;
+    tags: Array<{
       id?: string;
       name?: string;
       color?: string;

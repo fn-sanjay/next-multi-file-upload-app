@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import Uppy from "@uppy/core";
+import type { UploadResult as UppyUploadResult } from "@uppy/core";
 import { fetchCsrfToken, fetchWithRefresh } from "@/lib/client/auth-api";
 import { toast } from "sonner";
 import { UPLOADS_REFRESH_EVENT } from "@/lib/upload-events";
@@ -15,8 +16,10 @@ interface UploadFile {
   tags?: string[];
 }
 
+type UppyResponseBody = Record<string, unknown>;
+
 interface UploadContextType {
-  uppy: Uppy<UppyMeta>;
+  uppy: Uppy<UppyMeta, UppyResponseBody>;
   files: UploadFile[];
   totalProgress: number;
   isModalOpen: boolean;
@@ -49,10 +52,7 @@ type UploadCompleteResponse = ApiErrorResponse & {
   file?: { id: string };
 };
 
-type UploadResult = {
-  successful: Array<{ id: string }>;
-  failed?: Array<unknown>;
-};
+type UppyCompleteResult = UppyUploadResult<UppyMeta, UppyResponseBody>;
 
 // Hashing helper
 async function computeHash(file: File | Blob): Promise<string> {
@@ -77,7 +77,7 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
   const [isContactAdminOpen, setIsContactAdminOpen] = useState(false);
 
   const [uppy] = useState(() => {
-    return new Uppy<UppyMeta>({
+    return new Uppy<UppyMeta, UppyResponseBody>({
       id: "cloud-vault",
       autoProceed: false,
       restrictions: {
@@ -167,7 +167,7 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
             }
             uppy.emit("upload-success", file, {
               status: 200,
-              body: initData as Record<string, unknown>,
+              body: initData as UppyResponseBody,
             });
             continue;
           }
@@ -244,7 +244,7 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
 
           uppy.emit("upload-success", file, {
             status: 200,
-            body: completeData as Record<string, unknown>,
+            body: completeData as UppyResponseBody,
           });
         } catch (err) {
           uppy.emit("upload-error", file, err as Error);
@@ -281,13 +281,14 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
       setTotalProgress(uppy.getState().totalProgress || 0);
     };
 
-    const handleComplete = (result: UploadResult) => {
-      if (result.successful.length > 0) {
+    const handleComplete = (result: UppyCompleteResult) => {
+      const successCount = result.successful?.length ?? 0;
+      if (successCount > 0) {
         if (typeof window !== "undefined") {
           window.dispatchEvent(new Event(UPLOADS_REFRESH_EVENT));
         }
         toast.success(
-          `Successfully uploaded ${result.successful.length} file(s)`,
+          `Successfully uploaded ${successCount} file(s)`,
         );
         // Slight delay to let user see 100% complete before closing
         setTimeout(() => {

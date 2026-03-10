@@ -105,7 +105,7 @@ export function TagsHeader({
               New Tag
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px] bg-zinc-950 border-white/10 text-foreground">
+          <DialogContent className="sm:max-w-106.25 bg-zinc-950 border-white/10 text-foreground">
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold flex items-center gap-2">
                 <TagIcon className="w-6 h-6 text-primary" />
