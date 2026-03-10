@@ -3,6 +3,11 @@ import { prisma } from "@/lib/server/prisma";
 import { getAuthPayload } from "@/lib/server/auth/auth";
 import { createRecentAccessSchema } from "@/lib/validations/recent";
 
+type RecentAccessRow = {
+  file: { deletedAt: Date | null } | null;
+  folder: { deletedAt: Date | null } | null;
+};
+
 export async function GET(request: NextRequest) {
   const payload = await getAuthPayload(request);
 
@@ -11,7 +16,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const recent = await prisma.recentAccess.findMany({
+    const recent: RecentAccessRow[] = await prisma.recentAccess.findMany({
       where: {
         userId: payload.sub,
       },
